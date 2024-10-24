@@ -1,101 +1,91 @@
-import { useEffect, useState } from 'react';
-import './index.css';
-import { Pokemoncards } from './Pokemoncards';
+import { useEffect, useState } from "react";
+import "./index.css";
+import { Pokemoncards } from "./Pokemoncards";
 
-export const Pokemon = ()=>{
+export const Pokemon = () => {
+  const [Pokemon, setPokemon] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-    const [Pokemon , setPokemon] = useState([]);
-    const [loading , setLoading] = useState(true)
-    const [error , setError] = useState(null)
+  const [search, setSearch] = useState("");
 
-    const [search , setSearch] = useState('')
+  const api = "https://pokeapi.co/api/v2/pokemon?limit=24";
 
-    
-    
+  const fetchPokemon = async () => {
+    try {
+      const res = await fetch(api);
+      const data = await res.json();
+      // console.log(data);
 
-    const api = "https://pokeapi.co/api/v2/pokemon?limit=24";
+      const detailedpokemon = data.results.map(async (curpokemon) => {
+        const res = await fetch(curpokemon.url);
+        const data = await res.json();
+        return data;
+      });
 
-    const fetchPokemon = async() =>{
-        try {
-            const res = await fetch(api);
-            const data = await res.json();
-            // console.log(data);
+      const detailedpromise = await Promise.all(detailedpokemon);
 
-            const detailedpokemon = data.results.map(async(curpokemon)=>{
-                
-                const res = await fetch(curpokemon.url);
-                const data = await res.json();
-                return data;        
-            })
+      setPokemon(detailedpromise);
 
-            const detailedpromise = await Promise.all(detailedpokemon);
-               
-                
-            setPokemon(detailedpromise);
-
-            setLoading(false)
-            
-        } catch (error) {
-            setLoading(false)
-            setError(error)
-            
-        }
+      setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      setError(error);
     }
-    
-    useEffect(()=>{
-        fetchPokemon()
-    }, [])
+  };
 
+  useEffect(() => {
+    fetchPokemon();
+  }, []);
 
-    const searchData = Pokemon.filter((curpokemon) => 
-        curpokemon.name.toLowerCase().includes(search.toLowerCase())
-    );
-    
+  const searchData = Pokemon.filter((curpokemon) =>
+    curpokemon.name.toLowerCase().includes(search.toLowerCase())
+  );
 
-    
-
-
-    if(loading){
-        return(
-            <div>
-                <h1>Loading....</h1>
-            </div>
-        )
-    }
-    if(error){
-        return(
-            <div>
-                <h1>{error.message}</h1>
-            </div>
-        )
-    }
-
+  if (loading) {
     return (
-        <>
-            <section className='container'>
-                <header>
-                    <h1>Lets Catch Pokémon</h1>
-                </header>
+      <div>
+        <h1>Loading....</h1>
+      </div>
+    );
+  }
+  if (error) {
+    return (
+      <div>
+        <h1>{error.message}</h1>
+      </div>
+    );
+  }
 
-                <div className='pokemon-search'>
-                    <input type="text" placeholder='Search Pokémon' value={search} onChange={(e)=> setSearch(e.target.value)}  />
-                </div>
+  return (
+    <>
+      <section className="container">
+        <header>
+          <h1>Lets Catch Pokémon</h1>
+        </header>
 
-                <div>
-                        <ul className='cards'>
+        <div className="pokemon-search">
+          <input
+            type="text"
+            placeholder="Search Pokémon"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
 
-                            {
-                                // Pokemon.map((curpokemon)=>{
-                                searchData.map((curpokemon)=>{
-                                    return ( <Pokemoncards key={curpokemon.id} pokemonData={curpokemon} />)
-                                })
-                            }
-
-                        </ul>
-                </div>
-
-            </section>
-        </>
-    ) 
-    
-}
+        <div>
+          <ul className="cards">
+            {
+              // Pokemon.map((curpokemon)=>{
+              searchData.map((curpokemon) => {
+                return (
+                  <Pokemoncards key={curpokemon.id} pokemonData={curpokemon} />
+                );
+              })
+            }
+          </ul>
+        </div>
+      </section>
+    </>
+  );
+};
